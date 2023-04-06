@@ -290,3 +290,7 @@ replace github.com/prometheus/client_golang => github.com/prometheus/client_gola
 
 // https://issues.redhat.com/browse/OCPBUGS-6422
 replace golang.org/x/net => golang.org/x/net v0.5.0
+
+replace (
+	github.com/openshift/api v0.0.0-20230201213816-61d971884921 => ../api
+)

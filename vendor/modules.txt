@@ -8690,7 +8690,7 @@ github.com/opencontainers/go-digest
 ## explicit; go 1.11
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
-# github.com/openshift/api v0.0.0-20230201213816-61d971884921 => github.com/openshift/api v0.0.0-20230213202419-42edf4f1d905
+# github.com/openshift/api v0.0.0-20230201213816-61d971884921 => ../api
 ## explicit; go 1.19
 github.com/openshift/api/config/v1
 github.com/openshift/api/config/v1alpha1

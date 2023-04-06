@@ -11,6 +11,15 @@ type PowerVSResourceType string
 // PowerVSProcessorType enum attribute to identify the PowerVS instance processor type
 type PowerVSProcessorType string
 
+// IBMVPCLoadBalancerType is the type of LoadBalancer to use when registering
+// an instance with load balancers specified in LoadBalancerNames
+type IBMVPCLoadBalancerType string
+
+// ApplicationLoadBalancerType is possible values for IBMVPCLoadBalancerType.
+const (
+	ApplicationLoadBalancerType IBMVPCLoadBalancerType = "application" // Application Load Balancer for VPC (ALB)
+)
+
 const (
 	// PowerVSResourceTypeID enum property to identify an ID type resource reference
 	PowerVSResourceTypeID PowerVSResourceType = "ID"
@@ -121,6 +130,11 @@ type PowerVSMachineProviderConfig struct {
 	// default, which is subject to change over time. The current default is 32.
 	// +optional
 	MemoryGiB int32 `json:"memoryGiB,omitempty"`
+
+	// LoadBalancers is the set of load balancers to which the new instance
+	// should be added once it is created.
+	// +optional
+	LoadBalancers []LoadBalancerReference `json:"loadBalancers,omitempty"`
 }
 
 // PowerVSResource is a reference to a specific PowerVS resource by ID, Name or RegEx
@@ -150,7 +164,7 @@ type PowerVSResource struct {
 //
 // Compatibility level 1: Stable within a major release for a minimum of 12 months or 3 minor releases (whichever is longer).
 // +openshift:compatibility-gen:level=1
-//+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type PowerVSMachineProviderStatus struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -189,4 +203,10 @@ type PowerVSSecretReference struct {
 	// Name of the secret.
 	// +optional
 	Name string `json:"name,omitempty"`
+}
+
+// LoadBalancerReference is a reference to a load balancer on IBM Cloud virtual private cloud.
+type LoadBalancerReference struct {
+	Name string                 `json:"name"`
+	Type IBMVPCLoadBalancerType `json:"type"`
 }
