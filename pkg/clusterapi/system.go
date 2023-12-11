@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/openshift/installer/pkg/types/powervs"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -70,7 +71,7 @@ func (c *system) Run(ctx context.Context, installConfig *installconfig.InstallCo
 	}
 	c.client = c.lcp.Client
 
-	// Create a temporary directory to unpack the cluster-api assets
+	// Create a temporary infrastructure-components.yaml to unpack the cluster-api assets
 	// and use it as the working directory for the envtest environment.
 	componentDir, err := os.MkdirTemp("", "openshift-cluster-api-system-components")
 	if err != nil {
@@ -160,6 +161,20 @@ func (c *system) Run(ctx context.Context, installConfig *installconfig.InstallCo
 		// TODO
 	case nutanix.Name:
 		// TODO
+	case powervs.Name:
+		controllers = append(controllers,
+			c.getInfrastructureController(
+				&IBMCloud,
+				[]string{
+					"--provider-id-fmt=v2",
+					"--v=2",
+					"--health-addr={{suggestHealthHostPort}}",
+					"--webhook-port={{.WebhookPort}}",
+					"--webhook-cert-dir={{.WebhookCertDir}}",
+				},
+				map[string]string{},
+			),
+		)
 	case vsphere.Name:
 		// TODO
 	default:

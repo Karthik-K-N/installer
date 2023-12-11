@@ -1,9 +1,13 @@
 package clusterapi
 
 import (
+	"context"
 	"fmt"
+	"github.com/openshift/installer/pkg/asset/machines"
+	"github.com/openshift/installer/pkg/asset/manifests/powervs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -80,6 +84,10 @@ func (c *Cluster) Generate(dependencies asset.Parents) error {
 	c.FileList = []*asset.RuntimeFile{}
 
 	namespace := &corev1.Namespace{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Namespace",
+			APIVersion: corev1.SchemeGroupVersion.String(),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: capiutils.Namespace,
 		},
@@ -87,6 +95,10 @@ func (c *Cluster) Generate(dependencies asset.Parents) error {
 	c.FileList = append(c.FileList, &asset.RuntimeFile{Object: namespace, File: asset.File{Filename: "00_capi-namespace.yaml"}})
 
 	cluster := &clusterv1.Cluster{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Cluster",
+			APIVersion: clusterv1.GroupVersion.String(),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      clusterID.InfraID,
 			Namespace: capiutils.Namespace,
@@ -106,6 +118,10 @@ func (c *Cluster) Generate(dependencies asset.Parents) error {
 			&asset.RuntimeFile{
 				File: asset.File{Filename: "01_ignition-secret-master.yaml"},
 				Object: &corev1.Secret{
+					TypeMeta: metav1.TypeMeta{
+						Kind:       "Secret",
+						APIVersion: corev1.SchemeGroupVersion.String(),
+					},
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      fmt.Sprintf("%s-%s", clusterID.InfraID, "master"),
 						Namespace: capiutils.Namespace,
@@ -122,6 +138,10 @@ func (c *Cluster) Generate(dependencies asset.Parents) error {
 			&asset.RuntimeFile{
 				File: asset.File{Filename: "01_ignition-secret-bootstrap.yaml"},
 				Object: &corev1.Secret{
+					TypeMeta: metav1.TypeMeta{
+						Kind:       "Secret",
+						APIVersion: corev1.SchemeGroupVersion.String(),
+					},
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      fmt.Sprintf("%s-%s", clusterID.InfraID, "bootstrap"),
 						Namespace: capiutils.Namespace,
@@ -156,6 +176,18 @@ func (c *Cluster) Generate(dependencies asset.Parents) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to generate AWS manifests")
 		}
+	case "powervs":
+		osImage := strings.SplitN(string(*rhcosImage), "/", 2)
+		if len(osImage) != 2 {
+			fmt.Println("Image length is not 2")
+		}
+		bucket := osImage[0]
+		object := osImage[1]
+		var err error
+		out, err = powervs.GenerateClusterAssets(installConfig, clusterID, bucket, object)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate PowerVS manifests")
+		}
 	default:
 		return fmt.Errorf("unsupported platform %q", platform)
 	}
@@ -165,6 +197,13 @@ func (c *Cluster) Generate(dependencies asset.Parents) error {
 	if cluster.Spec.InfrastructureRef == nil {
 		return fmt.Errorf("failed to generate manifests: cluster.Spec.InfrastructureRef was never set")
 	}
+
+	// Generate the machines for the cluster, and append them to the list of manifests.
+	mc, err := machines.GenerateClusterAPI(context.TODO(), installConfig, clusterID, rhcosImage)
+	if err != nil {
+		return errors.Wrap(err, "failed to generate machines")
+	}
+	c.FileList = append(c.FileList, mc.Manifests...)
 
 	// Append the infrastructure manifests.
 	c.FileList = append(c.FileList, out.Manifests...)

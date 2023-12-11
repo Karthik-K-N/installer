@@ -2,7 +2,6 @@ package powervs
 
 import (
 	"bytes"
-	"strings"
 	"text/template"
 )
 
@@ -53,11 +52,11 @@ func CloudProviderConfig(infraID string, accountID string, vpcName string, regio
 			Region:                   region,
 			G2CredentialsFilePath:    "/etc/vpc/ibmcloud_api_key",
 			G2ResourceGroupName:      resourceGroupName,
-			G2VPCName:                vpcName,
+			G2VPCName:                "capi-powervs-karthik-vpc",
 			G2WorkerServiceAccountID: accountID,
-			G2VPCSubnetNames:         strings.Join(subnets, ","),
+			G2VPCSubnetNames:         "capi-powervs-karthik-vpcsubnet",
 			PowerVSCloudInstanceID:   "",
-			PowerVSCloudInstanceName: cloudInstName,
+			PowerVSCloudInstanceName: "capi-powervs-karthik-serviceInstance",
 			PowerVSRegion:            pvsRegion,
 			PowerVSZone:              pvsZone,
 		},

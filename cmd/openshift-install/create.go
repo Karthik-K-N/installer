@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/openshift/installer/pkg/clusterapi"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -128,6 +129,7 @@ var (
 
 				cleanup := command.SetupFileHook(command.RootOpts.Dir)
 				defer cleanup()
+				defer clusterapi.System().Teardown()
 
 				// FIXME: pulling the kubeconfig and metadata out of the root
 				// directory is a bit cludgy when we already have them in memory.
